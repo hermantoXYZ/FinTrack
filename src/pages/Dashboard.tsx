@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { fetchData, fetchPivot, fetchWilayah, ParsedDataItem, WilayahItem } from "../services/api";
-import { 
+import {
     AreaChart, Area, BarChart, Bar,
-    XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer 
+    XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer
 } from "recharts";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { scaleQuantile } from "d3-scale";
@@ -59,7 +59,7 @@ const Dashboard = () => {
     const [totalValue, setTotalValue] = useState(0);
     const [avgValue, setAvgValue] = useState(0);
     const [yoyGrowth, setYoyGrowth] = useState({ value: 0, isPositive: true });
-    
+
     useEffect(() => {
         const loadAllData = async () => {
             try {
@@ -68,7 +68,7 @@ const Dashboard = () => {
                     fetchPivot(),
                     fetchWilayah()
                 ]);
-                
+
                 // Urutkan data berdasarkan tahun
                 const sortedData = [...resData].sort((a, b) => a.tahun - b.tahun);
                 setOriginalData(sortedData);
@@ -96,9 +96,9 @@ const Dashboard = () => {
                 const previousYearValue = data[data.length - 2].value || 0;
                 if (previousYearValue > 0) {
                     const growth = ((currentYearValue - previousYearValue) / previousYearValue) * 100;
-                    setYoyGrowth({ 
-                        value: Math.abs(growth), 
-                        isPositive: growth >= 0 
+                    setYoyGrowth({
+                        value: Math.abs(growth),
+                        isPositive: growth >= 0
                     });
                 } else {
                     setYoyGrowth({ value: 0, isPositive: true });
@@ -117,7 +117,7 @@ const Dashboard = () => {
     const colorScale = useMemo(() => {
         const mapColors = ["#001B36", "#043B66", "#075C96", "#097CC5", "#0B9DF5", "#00f2fe"];
         if (originalPivotData.length === 0) return () => "#1e293b";
-        
+
         // Buat aggregate dak_fisik per region
         const regionalSums = originalPivotData.reduce((acc: any, curr: any) => {
             const wId = curr.wilayah_id;
@@ -129,7 +129,7 @@ const Dashboard = () => {
         const values = Object.values(regionalSums) as number[];
         // Cek jika tidak ada data numeric
         if (values.length === 0 || Math.max(...values) === 0) return () => "#1e293b";
-        
+
         return scaleQuantile<string>()
             .domain(values)
             .range(mapColors);
@@ -142,7 +142,7 @@ const Dashboard = () => {
             const wName = w.nama_wilayah.replace(/Kab\.\s|Kota\s/gi, "").trim().toLowerCase();
             return wName === geoName.toLowerCase() || geoName.toLowerCase().includes(wName);
         });
-        
+
         // Sum DAK Fisik (Atau Value lainnya)
         let sumValue = 0;
         if (matched) {
@@ -150,7 +150,7 @@ const Dashboard = () => {
                 .filter(p => p.wilayah_id === matched.id)
                 .reduce((acc, curr) => acc + (curr.dak_fisik || 0), 0);
         }
-        
+
         return { matched, sumValue };
     };
 
@@ -163,8 +163,8 @@ const Dashboard = () => {
         );
     }
 
-    const activeWilayahName = selectedWilayahId 
-        ? wilayahData.find(w => w.id === selectedWilayahId)?.nama_wilayah 
+    const activeWilayahName = selectedWilayahId
+        ? wilayahData.find(w => w.id === selectedWilayahId)?.nama_wilayah
         : "Seluruh Wilayah";
 
     return (
@@ -175,7 +175,7 @@ const Dashboard = () => {
                     <p className="dashboard-subtitle">Ringkasan Kinerja & Indikator Fiskal Terkini</p>
                 </div>
                 {selectedWilayahId && (
-                    <button 
+                    <button
                         onClick={() => setSelectedWilayahId(null)}
                         style={{ padding: '8px 16px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
                     >
@@ -214,7 +214,7 @@ const Dashboard = () => {
                         <h2 className="chart-title">Pemetaan Persebaran DAK Fisik (Kabupaten)</h2>
                         <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Klik pada area manapun untuk memfilter grafik di bawah</span>
                     </div>
-                    
+
                     <div className="map-container">
                         <ComposableMap
                             projection="geoMercator"
@@ -305,22 +305,22 @@ const Dashboard = () => {
                             <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#00f2fe" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#00f2fe" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#00f2fe" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#00f2fe" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <XAxis dataKey="tahun" stroke="#94a3b8" />
                                 <YAxis stroke="#94a3b8" tickFormatter={(val) => formatValue(val)} />
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                 <RechartsTooltip content={<CustomTooltip />} />
-                                <Area 
-                                    type="monotone" 
-                                    dataKey="value" 
-                                    name="Nilai" 
-                                    stroke="#00f2fe" 
+                                <Area
+                                    type="monotone"
+                                    dataKey="value"
+                                    name="Nilai"
+                                    stroke="#00f2fe"
                                     strokeWidth={3}
-                                    fillOpacity={1} 
-                                    fill="url(#colorValue)" 
+                                    fillOpacity={1}
+                                    fill="url(#colorValue)"
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
